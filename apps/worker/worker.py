@@ -27,8 +27,8 @@ import time
 from contextlib import asynccontextmanager
 
 from agents.orchestrator import get_review_graph
-from queue.redis_client import close_redis, ping_redis # type: ignore
-from queue.task_queue import TaskQueue # type: ignore
+from task_queue.redis_client import close_redis, ping_redis 
+from task_queue.task_queue import TaskQueue 
 from shared.config import get_settings
 from shared.constants import ReviewStatus
 from shared.logger import (

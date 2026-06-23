@@ -1,0 +1,27 @@
+{
+  "action": "opened",
+  "repository": {
+    "id": 1,
+    "full_name": "sravyasharma/Vault",
+    "clone_url": "https://github.com/sravyasharma/Vault.git",
+    "default_branch": "Mid",
+    "language": "Python"
+  },
+  "pull_request": {
+    "number": 1,
+    "title": "Sravyasharma patch 1",
+    "body": "AI review test",
+    "html_url": "https://github.com/sravyasharma/Vault/pull/1",
+    "user": {
+      "login": "sravyasharma"
+    },
+    "head": {
+      "sha": "e73929a",
+      "ref": "sravyasharma-patch-1"
+    },
+    "base": {
+      "sha": "4a999b6",
+      "ref": "Mid"
+    }
+  }
+}

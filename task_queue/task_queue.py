@@ -23,7 +23,7 @@ from datetime import datetime, timezone
 from shared.config import get_settings
 from shared.logger import get_logger
 from shared.schemas import ReviewJobSchema, WebhookPayloadSchema
-from queue.redis_client import get_redis_client # type: ignore
+from task_queue.redis_client import get_redis_client 
 
 logger = get_logger(__name__)
 

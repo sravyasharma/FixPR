@@ -38,7 +38,7 @@ def get_redis_client() -> Redis:
         decode_responses=False,
         max_connections=settings.worker_concurrency * 2 + 5,
         socket_connect_timeout=5,
-        socket_timeout=5,
+        socket_timeout=None,
         health_check_interval=30,
     )
     logger.info("Redis client initialized", url=str(settings.redis_url))

@@ -57,7 +57,7 @@ MAX_FILES_PER_BATCH: int = 5
 REVIEWABLE_EXTENSIONS: frozenset[str] = frozenset({
     ".py", ".pyi", ".js", ".jsx", ".ts", ".tsx", ".go",
     ".java", ".rb", ".rs", ".cpp", ".c", ".h", ".cs",
-    ".php", ".swift", ".kt", ".scala",
+    ".php", ".swift", ".kt", ".scala", ".md",
 })
 
 REVIEW_SYSTEM_PROMPT = """You are a senior software engineer performing a rigorous code review.

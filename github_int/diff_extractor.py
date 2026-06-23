@@ -1,20 +1,18 @@
 """
 github/diff_extractor.py
 
-Extract changed files and unified diffs from a PR using GitPython.
+Extract changed files and unified diffs from a PR using git diff output.
 
 Architecture role:
   - Called after clone_repo.py checks out the PR head SHA
-  - Produces PRDiffSchema — the input to all three analysis agents
+  - Produces PRDiffSchema - the input to all three analysis agents
   - Infers file language from extension for routing to correct analyzers
 """
 
 from __future__ import annotations
 
-import mimetypes
 from pathlib import Path
 
-import git
 from git import Repo
 
 from shared.constants import (
@@ -77,8 +75,7 @@ class DiffExtractor:
     """
     Extracts PR diff information from a locally cloned repository.
 
-    Compares HEAD (PR head SHA) against the merge base with the base branch,
-    which gives us exactly the files the PR author changed — not all diverged commits.
+    Compares the base SHA against the PR head SHA using raw git diff output.
     """
 
     def extract(
@@ -91,59 +88,48 @@ class DiffExtractor:
         base_branch: str = "main",
     ) -> PRDiffSchema:
         """
-        Compute the diff between the PR head and its merge base.
+        Compute the diff between the PR base and head commits.
 
         Returns PRDiffSchema with all changed files and their patches.
         """
         repo = Repo(local_repo_path)
-
-        # Find the merge base — the point where PR branch diverged from base
-        try:
-            merge_base_commits = repo.merge_base(head_sha, base_sha)
-            if merge_base_commits:
-                merge_base = merge_base_commits[0]
-            else:
-                # Fallback: diff directly against base_sha
-                merge_base = repo.commit(base_sha)
-        except Exception as exc:
-            logger.warning(
-                "Could not compute merge base, using base_sha directly",
-                error=str(exc),
-                head_sha=head_sha,
-                base_sha=base_sha,
-            )
-            merge_base = repo.commit(base_sha)
-
-        head_commit = repo.commit(head_sha)
-
-        # Get diff between merge base and PR head
-        diffs = merge_base.diff(head_commit, create_patch=True)
-
         changed_files: list[FileChangeSchema] = []
         skipped = 0
 
-        for diff_item in diffs:
-            # Determine file path (b_path for new name, handles renames)
-            file_path: str = diff_item.b_path or diff_item.a_path
+        name_only_output = repo.git.diff(base_sha, head_sha, "--name-only")
+        changed_file_paths = [
+            file_path
+            for file_path in name_only_output.splitlines()
+            if file_path
+        ]
 
-            # Skip binary files and very large files
-            if diff_item.diff and len(diff_item.diff) > MAX_PATCH_SIZE_BYTES:
+        for file_path in changed_file_paths:
+            status_output = repo.git.diff(
+                base_sha,
+                head_sha,
+                "--name-status",
+                "--",
+                file_path,
+            )
+            status_code = status_output.split(maxsplit=1)[0] if status_output else "M"
+            change_type = _map_change_type(status_code[:1])
+
+            raw_patch = repo.git.diff(base_sha, head_sha, "--", file_path)
+            patch_size = len(raw_patch.encode("utf-8"))
+
+            if patch_size > MAX_PATCH_SIZE_BYTES:
                 logger.debug(
                     "Skipping large diff",
                     file=file_path,
-                    size=len(diff_item.diff),
+                    size=patch_size,
                 )
-                patch_text = f"[Diff truncated — {len(diff_item.diff)} bytes]"
+                patch_text = f"[Diff truncated - {patch_size} bytes]"
                 skipped += 1
-            elif diff_item.diff:
-                try:
-                    patch_text = diff_item.diff.decode("utf-8", errors="replace")
-                except Exception:
-                    patch_text = None
+            elif raw_patch:
+                patch_text = raw_patch
             else:
                 patch_text = None
 
-            # Count additions/deletions from patch
             additions = 0
             deletions = 0
             if patch_text and not patch_text.startswith("[Diff"):
@@ -156,7 +142,7 @@ class DiffExtractor:
             changed_files.append(
                 FileChangeSchema(
                     file_path=file_path,
-                    change_type=_map_change_type(diff_item.change_type),
+                    change_type=change_type,
                     patch=patch_text,
                     additions=additions,
                     deletions=deletions,
@@ -172,7 +158,7 @@ class DiffExtractor:
             skipped_large=skipped,
         )
 
-        return PRDiffSchema(
+        diff = PRDiffSchema(
             repo_full_name=repo_full_name,
             pr_number=pr_number,
             head_sha=head_sha,
@@ -180,3 +166,5 @@ class DiffExtractor:
             local_repo_path=local_repo_path,
             changed_files=changed_files,
         )
+        repo.close()
+        return diff

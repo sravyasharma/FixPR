@@ -56,7 +56,6 @@ def configure_logging() -> None:
     # Shared processors — applied in all environments
     shared_processors: list[Any] = [
         structlog.contextvars.merge_contextvars,
-        structlog.stdlib.add_logger_name,
         _add_log_level,
         _drop_color_message_key,
         structlog.stdlib.PositionalArgumentsFormatter(),
@@ -84,7 +83,7 @@ def configure_logging() -> None:
             logging.getLevelName(settings.log_level)
         ),
         context_class=dict,
-        logger_factory=structlog.PrintLoggerFactory(sys.stdout),
+        logger_factory=structlog.stdlib.LoggerFactory(),
         cache_logger_on_first_use=True,
     )
 

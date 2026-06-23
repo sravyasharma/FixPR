@@ -45,9 +45,9 @@ from agents.merger import MergerAgent
 from agents.review import LLMReviewAgent
 from agents.security import SecurityAnalysisAgent
 from agents.static_analysis import StaticAnalysisAgent
-from github.clone_repo import RepoCloner
-from github.diff_extractor import DiffExtractor
-from github.github_client import GitHubClient
+from github_int.clone_repo import RepoCloner
+from github_int.diff_extractor import DiffExtractor
+from github_int.github_client import GitHubClient
 from shared.constants import ReviewStatus, Severity, SeverityScore
 from shared.logger import bind_request_context, get_logger
 from shared.schemas import (

@@ -21,8 +21,8 @@ import uuid
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
 
-from github.branch_manager import generate_fix_branch_name, fix_commit_message
-from github.github_client import GitHubClient
+from github_int.branch_manager import generate_fix_branch_name, fix_commit_message
+from github_int.github_client import GitHubClient
 from shared.constants import ApprovalAction, FixStatus
 from shared.logger import get_logger
 from shared.schemas import FixApprovalSchema, ReviewSummaryResponse

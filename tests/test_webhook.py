@@ -10,12 +10,14 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
+import os
 from unittest.mock import AsyncMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
 
 from apps.webhook_api.main import create_app
+from shared.config import get_settings
 
 # A known test secret used for signature generation in tests
 TEST_WEBHOOK_SECRET = "test_webhook_secret_key"
@@ -25,14 +27,19 @@ TEST_GITHUB_TOKEN = "ghp_test_token"
 @pytest.fixture(scope="module")
 def test_app():
     """Create a test FastAPI app with overridden settings."""
-    with patch("shared.config.Settings.github_webhook_secret", TEST_WEBHOOK_SECRET), \
-         patch("shared.config.Settings.github_token", TEST_GITHUB_TOKEN), \
-         patch("shared.config.Settings.secret_key", "test_secret"), \
-         patch("shared.config.Settings.database_url", "sqlite+aiosqlite:///:memory:"), \
-         patch("shared.config.Settings.redis_url", "redis://localhost:6379/0"), \
-         patch("shared.config.Settings.openai_api_key", "test_key"):
+    env = {
+        "GITHUB_WEBHOOK_SECRET": TEST_WEBHOOK_SECRET,
+        "GITHUB_TOKEN": TEST_GITHUB_TOKEN,
+        "SECRET_KEY": "test_secret",
+        "DATABASE_URL": "sqlite+aiosqlite:///:memory:",
+        "REDIS_URL": "redis://localhost:6379/0",
+        "OPENAI_API_KEY": "test_key",
+    }
+    with patch.dict(os.environ, env):
+        get_settings.cache_clear()
         app = create_app()
         yield app
+        get_settings.cache_clear()
 
 
 def _sign_payload(body: bytes, secret: str) -> str:

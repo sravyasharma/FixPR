@@ -27,7 +27,7 @@ from fastapi.responses import JSONResponse
 
 from apps.webhook_api.routes.reviews import router as reviews_router
 from apps.webhook_api.routes.webhook import router as webhook_router
-from queue.redis_client import close_redis, ping_redis # type: ignore
+from task_queue.redis_client import close_redis, ping_redis
 from shared.config import get_settings
 from shared.logger import configure_logging, get_logger
 from storage.db import close_engine, create_all_tables

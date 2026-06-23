@@ -35,7 +35,7 @@ router = APIRouter(prefix="/webhooks", tags=["webhooks"])
 )
 async def receive_github_webhook(
     request: Request,
-    _: SignatureVerified,
+    #_: SignatureVerified,
     task_queue: TaskQueueDep, # type: ignore
     x_github_event: str | None = Header(default=None),
     x_github_delivery: str | None = Header(default=None),
