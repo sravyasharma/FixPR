@@ -21,6 +21,7 @@ from apps.webhook_api.dependencies import SignatureVerified, TaskQueueDep
 from shared.constants import REVIEW_TRIGGER_ACTIONS
 from shared.logger import get_logger
 from shared.schemas import WebhookAckResponse, WebhookPayloadSchema
+from task_queue.task_queue import TaskQueue
 
 logger = get_logger(__name__)
 
@@ -35,8 +36,8 @@ router = APIRouter(prefix="/webhooks", tags=["webhooks"])
 )
 async def receive_github_webhook(
     request: Request,
-    #_: SignatureVerified,
-    task_queue: TaskQueueDep, # type: ignore
+    _: SignatureVerified,
+    task_queue: TaskQueueDep,
     x_github_event: str | None = Header(default=None),
     x_github_delivery: str | None = Header(default=None),
 ) -> WebhookAckResponse:
@@ -51,7 +52,7 @@ async def receive_github_webhook(
     """
     # Only handle pull_request events
     if x_github_event != "pull_request":
-        logger.debug("Ignoring non-PR webhook event", event=x_github_event)
+        logger.debug("Ignoring non-PR webhook event", event_type=x_github_event)
         return WebhookAckResponse(job_id="ignored", message=f"Event '{x_github_event}' ignored")
 
     raw = await request.json()

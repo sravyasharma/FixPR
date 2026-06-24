@@ -50,16 +50,29 @@ def get_engine() -> AsyncEngine:
     - pool_pre_ping: detect stale connections before using them
     """
     settings = get_settings()
+    database_url = str(settings.database_url)
+    if database_url.startswith("sqlite://"):
+        database_url = database_url.replace("sqlite://", "sqlite+aiosqlite://", 1)
+    if database_url.startswith("sqlite+aiosqlite:///:memory:"):
+        database_url = "sqlite+aiosqlite:///:memory:"
 
-    engine = create_async_engine(
-        str(settings.database_url),
-        pool_size=settings.db_pool_size,
-        max_overflow=settings.db_max_overflow,
-        pool_timeout=settings.db_pool_timeout,
-        pool_pre_ping=True,
-        echo=settings.db_echo_sql,
-        future=True,
-    )
+    engine_kwargs: dict[str, object] = {
+        "echo": settings.db_echo_sql,
+        "future": True,
+    }
+    if database_url.startswith("sqlite"):
+        engine_kwargs["pool_pre_ping"] = True
+    else:
+        engine_kwargs.update(
+            {
+                "pool_size": settings.db_pool_size,
+                "max_overflow": settings.db_max_overflow,
+                "pool_timeout": settings.db_pool_timeout,
+                "pool_pre_ping": True,
+            }
+        )
+
+    engine = create_async_engine(database_url, **engine_kwargs)
     logger.info(
         "Database engine created",
         pool_size=settings.db_pool_size,

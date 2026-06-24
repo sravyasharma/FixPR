@@ -98,13 +98,17 @@ class GitHubClient:
             logger.info("Review posting disabled — skipping")
             return
 
-        await self._run_sync(
-            self._post_review_sync,
-            repo_full_name,
-            pr_number,
-            result,
-            head_sha,
-        )
+        try:
+            await self._run_sync(
+                self._post_review_sync,
+                repo_full_name,
+                pr_number,
+                result,
+                head_sha,
+            )
+        except Exception as exc:
+            logger.error("Failed to post GitHub review", error=str(exc))
+            raise
 
     def _post_review_sync(
         self,
@@ -116,6 +120,9 @@ class GitHubClient:
         settings = get_settings()
         repo = _get_repo(repo_full_name)
         pr: PullRequest = repo.get_pull(pr_number)
+
+        if not hasattr(pr, "create_review"):
+            raise RuntimeError("GitHub pull request object does not support review creation")
 
         # Build line-level review comments (capped to avoid spam)
         review_comments = []

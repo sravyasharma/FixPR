@@ -17,7 +17,7 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import Field, PostgresDsn, RedisDsn, field_validator
+from pydantic import Field, RedisDsn, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -85,10 +85,10 @@ class Settings(BaseSettings):
     llm_provider: Literal["openai", "anthropic"] = Field(default="openai")
 
     # ------------------------------------------------------------------ #
-    # PostgreSQL
+    # Database
     # ------------------------------------------------------------------ #
-    database_url: PostgresDsn = Field(
-        description="PostgreSQL connection string e.g. postgresql+asyncpg://user:pass@host/db"
+    database_url: str = Field(
+        description="Database connection string; Postgres for production and sqlite+aiosqlite for local/tests"
     )
     db_pool_size: int = Field(default=10)
     db_max_overflow: int = Field(default=20)
@@ -163,12 +163,12 @@ class Settings(BaseSettings):
     @field_validator("database_url", mode="before")
     @classmethod
     def ensure_async_driver(cls, v: str) -> str:
-        """Ensure async driver (asyncpg) is used for SQLAlchemy async sessions."""
+        """Normalize DB URLs for local tests and production Postgres."""
         v = str(v)
         if v.startswith("postgresql://"):
-            v = v.replace("postgresql://", "postgresql+asyncpg://", 1)
-        elif v.startswith("postgres://"):
-            v = v.replace("postgres://", "postgresql+asyncpg://", 1)
+            return v.replace("postgresql://", "postgresql+asyncpg://", 1)
+        if v.startswith("postgres://"):
+            return v.replace("postgres://", "postgresql+asyncpg://", 1)
         return v
 
 
