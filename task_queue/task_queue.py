@@ -87,21 +87,22 @@ class TaskQueue:
         )
         return job.job_id
 
-    async def dequeue(self, timeout: int = 5) -> ReviewJobSchema | None:
+    async def dequeue(self, timeout: int = 5) -> tuple[ReviewJobSchema | None, bytes | None]:
         """
         Blocking pop from pending → atomically push to processing.
 
         Returns None on timeout (expected — caller should loop).
         """
-        pending_q = _queue_name()
-        processing_q = _processing_queue_name()
+        #pending_q = _queue_name()
+        #processing_q = _processing_queue_name()
 
         # BRPOPLPUSH: atomically move item from tail of pending to head of processing
-        raw = await self._redis.brpoplpush(pending_q, processing_q, timeout=timeout)
-
+        #raw = await self._redis.brpoplpush(pending_q, processing_q, timeout=timeout)
+        raw = await self._redis.brpoplpush(...)
         if raw is None:
-            return None
-
+            return None,None
+            
+        
         try:
             data = json.loads(raw)
             job = ReviewJobSchema.model_validate(data)
@@ -123,14 +124,14 @@ class TaskQueue:
             await self._redis.lpush(_dead_letter_queue_name(), raw)
             return None
 
-    async def ack(self, job: ReviewJobSchema) -> None:
+    async def ack(self, job: ReviewJobSchema, raw_bytes: bytes) -> None:
         """
         Acknowledge successful processing.
 
         Removes the job from the in-flight processing list.
         """
-        job_bytes = job.model_dump_json().encode("utf-8")
-        removed = await self._redis.lrem(_processing_queue_name(), 1, job_bytes)
+        #job_bytes = job.model_dump_json().encode("utf-8")
+        removed = await self._redis.lrem(_processing_queue_name(), 1, raw_bytes)
         logger.info("Job acknowledged", job_id=job.job_id, removed=removed)
 
     async def requeue(self, job: ReviewJobSchema) -> None:

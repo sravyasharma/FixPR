@@ -270,7 +270,8 @@ async def node_autofix(state: PipelineState) -> dict[str, Any]:
 
     # Filter to findings that meet the autofix threshold
     from shared.constants import SeverityScore
-    min_score = SeverityScore[settings.autofix_min_severity]
+    #min_score = SeverityScore[settings.autofix_min_severity]
+    min_score = SeverityScore.from_severity(settings.autofix_min_severity)
     eligible = [
         f for f in state.merged_result.findings
         if SeverityScore.from_severity(f.severity) >= min_score

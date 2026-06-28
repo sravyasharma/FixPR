@@ -21,15 +21,7 @@ from shared.schemas import FileChangeSchema, FindingSchema
 
 logger = get_logger(__name__)
 
-# Flake8 error code prefix → Severity
-FLAKE8_SEVERITY_MAP: dict[str, Severity] = {
-    "F8": Severity.HIGH,    # F8xx: pyflakes errors (undefined names, etc.)
-    "F4": Severity.MEDIUM,  # F4xx: import issues
-    "F8": Severity.HIGH,
-    "E9": Severity.CRITICAL, # E9xx: syntax errors, can't parse file
-    "W6": Severity.MEDIUM,  # W6xx: deprecated features
-    "C9": Severity.MEDIUM,  # C9xx: McCabe complexity
-}
+
 
 # Pure style codes to skip
 SKIP_CODES: frozenset[str] = frozenset({

@@ -24,7 +24,7 @@ from datetime import datetime, timezone
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from shared.constants import FixStatus, ReviewStatus
+from shared.constants import ApprovalAction, FixStatus, ReviewStatus
 from shared.logger import get_logger
 from shared.schemas import (
     FindingSchema,
@@ -321,7 +321,7 @@ class FixPatchRepo:
             logger.warning("FixPatch not found for approval", patch_id=approval.patch_id)
             return None
 
-        model.status = approval.action  # APPROVED or REJECTED
+        model.status = model.status = FixStatus.APPROVED if approval.action == ApprovalAction.APPROVE else FixStatus.REJECTED
         model.reviewer = approval.reviewer
         model.reviewer_comment = approval.comment
         model.reviewed_at = approval.reviewed_at

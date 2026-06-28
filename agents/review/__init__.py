@@ -89,7 +89,9 @@ Each finding must have exactly these fields:
   "code_snippet": "Optional: the problematic code (1-3 lines)"
 }
 
-Respond ONLY with a valid JSON array. No preamble, no explanation, no markdown fences."""
+Respond with a JSON object: { "findings": [ ...array of finding objects... ] }
+Return { "findings": [] } if no issues are found.
+"""
 
 
 SEVERITY_MAP: dict[str, Severity] = {
@@ -283,7 +285,7 @@ class LLMReviewAgent:
             # Model returns either array or {"findings": [...]}
             parsed = json.loads(content)
             if isinstance(parsed, dict):
-                raw_findings = parsed.get("findings", parsed.get("issues", [parsed]))
+                raw_findings = parsed.get("findings", parsed.get("issues", []))
             elif isinstance(parsed, list):
                 raw_findings = parsed
             else:

@@ -288,7 +288,7 @@ class MergerAgent:
             tool_findings = sum(1 for f in findings if str(f.source) == tool)
             tools_table.append(f"| `{tool}` | Security Analysis | {tool_findings} |")
         if llm_result.files_reviewed:
-            llm_count = sum(1 for f in findings if f.source == "llm_review")
+            llm_count = sum(1 for f in findings if str(f.source) == AnalysisSource.LLM_REVIEW or f.source == AnalysisSource.LLM_REVIEW)
             tools_table.append(
                 f"| `GPT-4o ({llm_result.model_used})` | LLM Review | {llm_count} |"
             )
